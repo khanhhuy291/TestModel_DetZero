@@ -105,17 +105,7 @@ class WaymoDetectionMetricsEstimator(tf.test.TestCase):
             }
             '''
         
-        if '3d' in config_type:
-            config_text += '''
-            matcher_type: TYPE_HUNGARIAN
-            iou_thresholds: 0.0
-            iou_thresholds: 0.7
-            iou_thresholds: 0.5
-            iou_thresholds: 0.5
-            iou_thresholds: 0.5
-            box_type: TYPE_3D
-            '''
-        elif 'bev' in config_type:
+        if 'bev' in config_type:
             config_text += '''
             matcher_type: TYPE_HUNGARIAN
             iou_thresholds: 0.0
@@ -124,6 +114,16 @@ class WaymoDetectionMetricsEstimator(tf.test.TestCase):
             iou_thresholds: 0.5
             iou_thresholds: 0.5
             box_type: TYPE_2D
+            '''
+        else:
+            config_text += '''
+            matcher_type: TYPE_HUNGARIAN
+            iou_thresholds: 0.0
+            iou_thresholds: 0.7
+            iou_thresholds: 0.5
+            iou_thresholds: 0.5
+            iou_thresholds: 0.5
+            box_type: TYPE_3D
             '''
 
         for x in range(0, 100):
@@ -190,7 +190,9 @@ class WaymoDetectionMetricsEstimator(tf.test.TestCase):
         )
 
     def eval_value_ops(self, sess, graph, metrics):
-        return {item[0]: sess.run([item[1][0]]) for item in metrics.items()}
+        value_ops = {item[0]: item[1][0] for item in metrics.items()}
+        res = sess.run(value_ops)
+        return {k: [v] for k, v in res.items()}
 
     def mask_by_distance(self, distance_thresh, boxes_3d, *args):
         mask = np.linalg.norm(boxes_3d[:, 0:2], axis=1) < distance_thresh + 0.5
@@ -201,7 +203,7 @@ class WaymoDetectionMetricsEstimator(tf.test.TestCase):
 
         return tuple(ret_ans)
 
-    def waymo_evaluation(self, prediction_infos, gt_infos, class_name, config_type=['object'], distance_thresh=100, fake_gt_infos=True):
+    def waymo_evaluation(self, prediction_infos, gt_infos, class_name, config_type=['object', '3d'], distance_thresh=100, fake_gt_infos=True):
         print('Start the waymo evaluation...')
         assert len(prediction_infos) == len(gt_infos), '%d vs %d' % (prediction_infos.__len__(), gt_infos.__len__())
 
