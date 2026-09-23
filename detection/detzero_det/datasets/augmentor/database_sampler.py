@@ -24,7 +24,7 @@ class DataBaseSampler(object):
             with open(str(db_info_path), 'rb') as f:
                 infos = pickle.load(f)
             
-            [self.db_infos[cur_class].extend(infos[cur_class]) for cur_class in class_names]
+            [self.db_infos[cur_class].extend(infos.get(cur_class, [])) for cur_class in class_names]
 
         for func_name, val in sampler_cfg.PREPARE.items():
             self.db_infos = getattr(self, func_name)(self.db_infos, val)
@@ -88,6 +88,8 @@ class DataBaseSampler(object):
         Returns:
 
         """
+        if len(self.db_infos[class_name]) == 0:
+            return []
         sample_num, pointer, indices = int(sample_group['sample_num']), sample_group['pointer'], sample_group['indices']
         if pointer >= len(self.db_infos[class_name]):
             indices = np.random.permutation(len(self.db_infos[class_name]))
@@ -190,6 +192,8 @@ class DataBaseSampler(object):
                 sample_group['sample_num'] = str(int(self.sample_class_num[class_name]) - num_gt)
             if int(sample_group['sample_num']) > 0:
                 sampled_dict = self.sample_with_fixed_number(class_name, sample_group)
+                if len(sampled_dict) == 0:
+                    continue
 
                 sampled_boxes = np.stack([x['box3d_lidar'] for x in sampled_dict], axis=0).astype(np.float32)
 

@@ -281,8 +281,11 @@ def process_single_tfrecord_multiprocessing(sequence_file:str, has_label:bool=Tr
 
 
 def save_data_worker(frame):
-    range_images, camera_projections, range_image_top_pose = \
-        frame_utils.parse_range_image_and_camera_projection(frame)
+    parsed = frame_utils.parse_range_image_and_camera_projection(frame)
+    if len(parsed) == 4:
+        range_images, camera_projections, _, range_image_top_pose = parsed
+    else:
+        range_images, camera_projections, range_image_top_pose = parsed
 
     points, cp_points, points_in_NLZ_flag, points_intensity, points_elongation = \
         convert_range_image_to_point_cloud(frame, range_images, camera_projections, range_image_top_pose)
